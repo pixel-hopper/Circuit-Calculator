@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circuit Calculator</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔌</text></svg>">
+  
+  <style>
+    :root {
+      --bg-color: #f4f4f4;
+      --text-color: #333;
+      --border-color: #ddd;
+      --highlight-color: #0d6efd;
+      --header-bg: #f2f2f2;
+      --row-hover: #eee;
+      --input-bg: #fff;
+      --input-border: #ccc;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1e1e1e;
+        --text-color: #e0e0e0;
+        --header-bg: #2d2d2d;
+        --border-color: #444;
+        --row-hover: #3a3a3a;
+        --input-bg: #2d2d2d;
+        --input-border: #555;
+      }
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    h1 { 
+      text-align: center; 
+      font-size: 2em; 
+      margin-bottom: 20px; 
+      color: var(--text-color); 
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.8em;
+      margin-bottom: 1.5rem;
+      color: var(--text-color);
+    }
+
+    h3 {
+      margin-bottom: 1.2rem;
+      font-size: 1.3rem;
+      color: var(--text-color);
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .bubble {
+      width: 100%;
+      margin-bottom: 2rem;
+      border-collapse: collapse;
+      border: 1px solid var(--border-color);
+    }
+    
+    .bubble th, .bubble td {
+      padding: 12px 15px;
+      text-align: left;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+    }
+    
+    .bubble th {
+      background-color: var(--header-bg);
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    .bubble th[colspan="2"] {
+      text-align: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-weight: 500;
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      box-sizing: border-box;
+      background-color: transparent;
+      color: var(--text-color);
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      box-sizing: border-box;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+
+    .search-container {
+      margin: 20px 0;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.2em;
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      box-sizing: border-box;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: var(--highlight-color);
+    }
+
+    .unit-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .unit-symbol {
+      font-size: 0.9em;
+      color: #666;
+      min-width: 30px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      h2 {
+        font-size: 1.5em;
+      }
+      
+      h3 {
+        font-size: 1.2em;
+      }
+      
+      .bubble {
+        font-size: 0.9em;
+      }
+      
+      .bubble th, .bubble td {
+        padding: 8px 10px;
+      }
+      
+      input[type="number"], 
+      input[type="text"] {
+        padding: 8px 10px;
+      }
+    }
+
+    /* Resistor color code specific styles */
+    .resistor-bands {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .resistor-band {
+      width: 40px;
+      height: 100px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      text-shadow: 0 0 2px rgba(0,0,0,0.7);
+    }
+
+    .resistor-value {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 1rem 0;
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.1);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Circuit Calculator</h2>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search conversions..." oninput="filterConversions()">
+  </div>
+
+  <div class="container">
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Resistance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="ohms">Ohms (Ω)</label><input type="number" id="ohms" /></div></td>
+          <td><div class="input-group"><label for="kohms">Kilo-ohms (KΩ)</label><input type="number" id="kohms" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="mohms">Mega-ohms (MΩ)</label><input type="number" id="mohms" /></div></td>
+          <td><div class="input-group"><label for="milliohms">Milliohms (mΩ)</label><input type="number" id="milliohms" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Capacitance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="farads">Farads (F)</label><input type="number" id="farads" oninput="convertCapacitance(event)" /></div></td>
+          <td><div class="input-group"><label for="microfarads">Microfarads (µF)</label><input type="number" id="microfarads" oninput="convertCapacitance(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="nanofarads">Nanofarads (nF)</label><input type="number" id="nanofarads" oninput="convertCapacitance(event)" /></div></td>
+          <td><div class="input-group"><label for="picofarads">Picofarads (pF)</label><input type="number" id="picofarads" oninput="convertCapacitance(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Inductance -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Inductance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="henries">Henries (H)</label><input type="number" id="henries" oninput="convertInductance(event)" /></div></td>
+          <td><div class="input-group"><label for="millihenries">Millihenries (mH)</label><input type="number" id="millihenries" oninput="convertInductance(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="microhenries">Microhenries (µH)</label><input type="number" id="microhenries" oninput="convertInductance(event)" /></div></td>
+          <td><div class="input-group"><label for="nanohenries">Nanohenries (nH)</label><input type="number" id="nanohenries" oninput="convertInductance(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Current -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Current</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="amps">Amps (A)</label><input type="number" id="amps" oninput="convertCurrent(event)" /></div></td>
+          <td><div class="input-group"><label for="milliamps">Milliamps (mA)</label><input type="number" id="milliamps" oninput="convertCurrent(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="microamps">Microamps (µA)</label><input type="number" id="microamps" oninput="convertCurrent(event)" /></div></td>
+          <td><div class="input-group"><label for="nanoamps">Nanoamps (nA)</label><input type="number" id="nanoamps" oninput="convertCurrent(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Voltage -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Voltage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="volts">Volts (V)</label><input type="number" id="volts" oninput="convertVoltage(event)" /></div></td>
+          <td><div class="input-group"><label for="millivolts">Millivolts (mV)</label><input type="number" id="millivolts" oninput="convertVoltage(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="microvolts">Microvolts (µV)</label><input type="number" id="microvolts" oninput="convertVoltage(event)" /></div></td>
+          <td><div class="input-group"><label for="kilovolts">Kilovolts (kV)</label><input type="number" id="kilovolts" oninput="convertVoltage(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Power -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Power</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="watts">Watts (W)</label><input type="number" id="watts" oninput="convertPower(event)" /></div></td>
+          <td><div class="input-group"><label for="milliwatts">Milliwatts (mW)</label><input type="number" id="milliwatts" oninput="convertPower(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="kilowatts">Kilowatts (kW)</label><input type="number" id="kilowatts" oninput="convertPower(event)" /></div></td>
+          <td><div class="input-group"><label for="megawatts">Megawatts (MW)</label><input type="number" id="megawatts" oninput="convertPower(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="dbm">dBm</label><input type="number" id="dbm" oninput="convertDBM(event)" /></div></td>
+          <td><div class="input-group"><label for="dbw">dBW</label><input type="number" id="dbw" oninput="convertDBW(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Frequency -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="hertz">Hertz (Hz)</label><input type="number" id="hertz" oninput="convertFrequency(event)" /></div></td>
+          <td><div class="input-group"><label for="kilohertz">Kilohertz (kHz)</label><input type="number" id="kilohertz" oninput="convertFrequency(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="megahertz">Megahertz (MHz)</label><input type="number" id="megahertz" oninput="convertFrequency(event)" /></div></td>
+          <td><div class="input-group"><label for="gigahertz">Gigahertz (GHz)</label><input type="number" id="gigahertz" oninput="convertFrequency(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Time Constants -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Time Constants (RC/RL)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="tau">Time Constant (τ) in seconds</label><input type="number" id="tau" oninput="calculateTimeConstants(event)" /></div></td>
+          <td><div class="input-group"><label for="cutoffFreq">Cutoff Frequency (Hz)</label><input type="number" id="cutoffFreq" oninput="calculateTimeConstants(event)" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="resistance">Resistance (Ω)</label><input type="number" id="resistance" oninput="calculateTimeConstants(event)" /></div></td>
+          <td><div class="input-group"><label for="capacitance">Capacitance (F) or Inductance (H)</label><input type="number" id="capacitance" oninput="calculateTimeConstants(event)" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Ohm's Law -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Ohm's Law Calculator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="input-group"><label for="ohmsVoltage">Voltage (V)</label><input type="number" id="ohmsVoltage" oninput="calculateOhmsLaw()" /></div></td>
+          <td><div class="input-group"><label for="ohmsCurrent">Current (A)</label><input type="number" id="ohmsCurrent" oninput="calculateOhmsLaw()" /></div></td>
+        </tr>
+        <tr>
+          <td><div class="input-group"><label for="ohmsResistance">Resistance (Ω)</label><input type="number" id="ohmsResistance" oninput="calculateOhmsLaw()" /></div></td>
+          <td><div class="input-group"><label for="ohmsPower">Power (W)</label><input type="number" id="ohmsPower" oninput="calculateOhmsLaw()" /></div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Resistor Color Code -->
+    <table class="bubble">
+      <thead>
+        <tr>
+          <th colspan="2">Resistor Color Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="2">
+            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+              <select id="band1" style="padding: 8px; border-radius: 4px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="0" style="background: black; color: white;">Black - 0</option>
+                <option value="1" style="background: #8B4513; color: white;">Brown - 1</option>
+                <option value="2" style="background: red; color: white;">Red - 2</option>
+                <option value="3" style="background: orange; color: black;">Orange - 3</option>
+                <option value="4" style="background: yellow; color: black;">Yellow - 4</option>
+                <option value="5" style="background: green; color: white;">Green - 5</option>
+                <option value="6" style="background: blue; color: white;">Blue - 6</option>
+                <option value="7" style="background: purple; color: white;">Violet - 7</option>
+                <option value="8" style="background: gray; color: black;">Gray - 8</option>
+                <option value="9" style="background: white; color: black; border: 1px solid #ccc;">White - 9</option>
+              </select>
+              
+              <select id="band2" style="padding: 8px; border-radius: 4px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="0" style="background: black; color: white;">Black - 0</option>
+                <option value="1" style="background: #8B4513; color: white;">Brown - 1</option>
+                <option value="2" style="background: red; color: white;">Red - 2</option>
+                <option value="3" style="background: orange; color: black;">Orange - 3</option>
+                <option value="4" style="background: yellow; color: black;">Yellow - 4</option>
+                <option value="5" style="background: green; color: white;">Green - 5</option>
+                <option value="6" style="background: blue; color: white;">Blue - 6</option>
+                <option value="7" style="background: purple; color: white;">Violet - 7</option>
+                <option value="8" style="background: gray; color: black;">Gray - 8</option>
+                <option value="9" style="background: white; color: black; border: 1px solid #ccc;">White - 9</option>
+              </select>
+              
+              <select id="band3" style="padding: 8px; border-radius: 4px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="1" style="background: black; color: white;">Black - x1Ω</option>
+                <option value="10" style="background: #8B4513; color: white;">Brown - x10Ω</option>
+                <option value="100" style="background: red; color: white;">Red - x100Ω</option>
+                <option value="1000" style="background: orange; color: black;">Orange - x1kΩ</option>
+                <option value="10000" style="background: yellow; color: black;">Yellow - x10kΩ</option>
+                <option value="100000" style="background: green; color: white;">Green - x100kΩ</option>
+                <option value="1000000" style="background: blue; color: white;">Blue - x1MΩ</option>
+                <option value="10000000" style="background: purple; color: white;">Violet - x10MΩ</option>
+                <option value="0.1" style="background: gold; color: black;">Gold - x0.1Ω</option>
+                <option value="0.01" style="background: silver; color: black;">Silver - x0.01Ω</option>
+              </select>
+              
+              <select id="tolerance" style="padding: 8px; border-radius: 4px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
+                <option value="1" style="background: #8B4513; color: white;">Brown - ±1%</option>
+                <option value="2" style="background: red; color: white;">Red - ±2%</option>
+                <option value="0.5" style="background: green; color: white;">Green - ±0.5%</option>
+                <option value="0.25" style="background: blue; color: white;">Blue - ±0.25%</option>
+                <option value="0.1" style="background: purple; color: white;">Violet - ±0.1%</option>
+                <option value="0.05" style="background: gray; color: black;">Gray - ±0.05%</option>
+                <option value="5" style="background: gold; color: black;">Gold - ±5%</option>
+                <option value="10" style="background: silver; color: black;">Silver - ±10%</option>
+                <option value="20" style="background: none; color: black;">None - ±20%</option>
+              </select>
+            </div>
+            <div style="text-align: center;">
+              <div id="resistorValue" style="font-size: 1.2em; margin-bottom: 10px;">Resistance: 0Ω ±5%</div>
+              <button onclick="calculateResistorValue()" style="padding: 8px 16px; background-color: var(--highlight-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Calculate</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <script>
+    let updating = false;
+
+    // Search functionality
+    function filterConversions() {
+      const filter = document.getElementById('searchInput').value.toLowerCase();
+      const tables = document.querySelectorAll('.bubble');
+      
+      if (filter === '') {
+        tables.forEach(table => table.style.display = 'table');
+        return;
+      }
+      
+      tables.forEach(table => {
+        const title = table.querySelector('th').textContent.toLowerCase();
+        const rows = Array.from(table.querySelectorAll('tr'));
+        let hasMatch = false;
+        
+        // Check if title matches
+        if (title.includes(filter)) {
+          hasMatch = true;
+        } else {
+          // Check if any label matches
+          const labels = table.querySelectorAll('label');
+          for (const label of labels) {
+            if (label.textContent.toLowerCase().includes(filter)) {
+              hasMatch = true;
+              break;
+            }
+          }
+        }
+        
+        table.style.display = hasMatch ? 'table' : 'none';
+      });
+    }
+
+    // Helper function to set value if element exists
+    function setValue(id, value) {
+      const element = document.getElementById(id);
+      if (element && !isNaN(value) && value !== '') {
+        // Don't update if the value is effectively the same (prevents flickering)
+        const currentValue = parseFloat(element.value);
+        if (!isNaN(currentValue) && Math.abs(currentValue - value) < Number.EPSILON) {
+          return;
+        }
+        
+        // Format the number for display
+        let formattedValue = value.toString();
+        
+        // Remove trailing decimal point if no decimal places
+        if (formattedValue.indexOf('.') !== -1) {
+          formattedValue = formattedValue.replace(/\.?0+$/, '');
+        }
+        
+        element.value = formattedValue;
+      }
+    }
+
+    // Function to handle input with debounce
+    let timeoutId;
+    function handleInput(e) {
+      // Clear any pending updates
+      clearTimeout(timeoutId);
+      
+      // Process the input after a short delay (100ms)
+      timeoutId = setTimeout(() => {
+        const value = parseFloat(e.target.value);
+        if (isNaN(value)) {
+          clearAllExcept(e.target.id);
+          return;
+        }
+        
+        switch(e.target.id) {
+          case 'ohms':
+            setValue('kohms', value / 1000);
+            setValue('mohms', value / 1000000);
+            setValue('milliohms', value * 1000);
+            break;
+          case 'kohms':
+            setValue('ohms', value * 1000);
+            setValue('mohms', value / 1000);
+            setValue('milliohms', value * 1000000);
+            break;
+          case 'mohms':
+            setValue('ohms', value * 1000000);
+            setValue('kohms', value * 1000);
+            setValue('milliohms', value * 1000000000);
+            break;
+          case 'milliohms':
+            setValue('ohms', value / 1000);
+            setValue('kohms', value / 1000000);
+            setValue('mohms', value / 1000000000);
+            break;
+          case 'farads':
+            setValue('microfarads', value * 1000000);
+            setValue('nanofarads', value * 1000000000);
+            setValue('picofarads', value * 1000000000000);
+            break;
+          case 'microfarads':
+            setValue('farads', value / 1000000);
+            setValue('nanofarads', value * 1000);
+            setValue('picofarads', value * 1000000);
+            break;
+          case 'nanofarads':
+            setValue('farads', value / 1000000000);
+            setValue('microfarads', value / 1000);
+            setValue('picofarads', value * 1000);
+            break;
+          case 'picofarads':
+            setValue('farads', value / 1000000000000);
+            setValue('microfarads', value / 1000000);
+            setValue('nanofarads', value / 1000);
+            break;
+          case 'henries':
+            setValue('millihenries', value * 1000);
+            setValue('microhenries', value * 1000000);
+            setValue('nanohenries', value * 1000000000);
+            break;
+          case 'millihenries':
+            setValue('henries', value / 1000);
+            setValue('microhenries', value * 1000);
+            setValue('nanohenries', value * 1000000);
+            break;
+          case 'microhenries':
+            setValue('henries', value / 1000000);
+            setValue('millihenries', value / 1000);
+            setValue('nanohenries', value * 1000);
+            break;
+          case 'nanohenries':
+            setValue('henries', value / 1000000000);
+            setValue('millihenries', value / 1000000);
+            setValue('microhenries', value / 1000);
+            break;
+          case 'amps':
+            setValue('milliamps', value * 1000);
+            setValue('microamps', value * 1000000);
+            setValue('nanoamps', value * 1000000000);
+            break;
+          case 'milliamps':
+            setValue('amps', value / 1000);
+            setValue('microamps', value * 1000);
+            setValue('nanoamps', value * 1000000);
+            break;
+          case 'microamps':
+            setValue('amps', value / 1000000);
+            setValue('milliamps', value / 1000);
+            setValue('nanoamps', value * 1000);
+            break;
+          case 'nanoamps':
+            setValue('amps', value / 1000000000);
+            setValue('milliamps', value / 1000000);
+            setValue('microamps', value / 1000);
+            break;
+          case 'volts':
+            setValue('millivolts', value * 1000);
+            setValue('microvolts', value * 1000000);
+            setValue('kilovolts', value / 1000);
+            break;
+          case 'millivolts':
+            setValue('volts', value / 1000);
+            setValue('microvolts', value * 1000);
+            setValue('kilovolts', value / 1000000);
+            break;
+          case 'microvolts':
+            setValue('volts', value / 1000000);
+            setValue('millivolts', value / 1000);
+            setValue('kilovolts', value / 1000000000);
+            break;
+          case 'kilovolts':
+            setValue('volts', value * 1000);
+            setValue('millivolts', value * 1000000);
+            setValue('microvolts', value * 1000000000);
+            break;
+          case 'watts':
+            setValue('milliwatts', value * 1000);
+            setValue('kilowatts', value / 1000);
+            setValue('megawatts', value / 1000000);
+            setValue('dbm', 10 * Math.log10(value * 1000));
+            setValue('dbw', 10 * Math.log10(value));
+            break;
+          case 'milliwatts':
+            setValue('watts', value / 1000);
+            setValue('kilowatts', value / 1000000);
+            setValue('megawatts', value / 1000000000);
+            setValue('dbm', 10 * Math.log10(value));
+            setValue('dbw', 10 * Math.log10(value / 1000));
+            break;
+          case 'kilowatts':
+            setValue('watts', value * 1000);
+            setValue('milliwatts', value * 1000000);
+            setValue('megawatts', value / 1000);
+            setValue('dbm', 10 * Math.log10(value * 1000000));
+            setValue('dbw', 10 * Math.log10(value));
+            break;
+          case 'megawatts':
+            setValue('watts', value * 1000000);
+            setValue('milliwatts', value * 1000000000);
+            setValue('kilowatts', value * 1000);
+            setValue('dbm', 10 * Math.log10(value * 1000000000));
+            setValue('dbw', 10 * Math.log10(value * 1000));
+            break;
+          case 'dbm':
+            const mw = Math.pow(10, value / 10);
+            setValue('watts', mw / 1000);
+            setValue('milliwatts', mw);
+            setValue('kilowatts', mw / 1000000);
+            setValue('megawatts', mw / 1000000000);
+            setValue('dbw', value - 30);
+            break;
+          case 'dbw':
+            const w = Math.pow(10, value / 10);
+            setValue('watts', w);
+            setValue('milliwatts', w * 1000);
+            setValue('kilowatts', w / 1000);
+            setValue('megawatts', w / 1000000);
+            setValue('dbm', value + 30);
+            break;
+          case 'hertz':
+            setValue('kilohertz', value / 1000);
+            setValue('megahertz', value / 1000000);
+            setValue('gigahertz', value / 1000000000);
+            break;
+          case 'kilohertz':
+            setValue('hertz', value * 1000);
+            setValue('megahertz', value / 1000);
+            setValue('gigahertz', value / 1000000);
+            break;
+          case 'megahertz':
+            setValue('hertz', value * 1000000);
+            setValue('kilohertz', value * 1000);
+            setValue('gigahertz', value / 1000);
+            break;
+          case 'gigahertz':
+            setValue('hertz', value * 1000000000);
+            setValue('kilohertz', value * 1000000);
+            setValue('megahertz', value * 1000);
+            break;
+          case 'tau':
+            const tau = parseFloat(e.target.value);
+            if (!isNaN(tau) && tau > 0) {
+              const newCutoff = 1 / (2 * Math.PI * tau);
+              setValue('cutoffFreq', newCutoff);
+            }
+            break;
+          case 'cutoffFreq':
+            const cutoffFreq = parseFloat(e.target.value);
+            if (!isNaN(cutoffFreq) && cutoffFreq > 0) {
+              const newTau = 1 / (2 * Math.PI * cutoffFreq);
+              setValue('tau', newTau);
+            }
+            break;
+          case 'resistance':
+          case 'capacitance':
+            const resistance = parseFloat(document.getElementById('resistance').value);
+            const capacitance = parseFloat(document.getElementById('capacitance').value);
+            if (!isNaN(resistance) && !isNaN(capacitance) && resistance > 0 && capacitance > 0) {
+              const newTau = resistance * capacitance;
+              const newCutoff = 1 / (2 * Math.PI * newTau);
+              setValue('tau', newTau);
+              setValue('cutoffFreq', newCutoff);
+            }
+            break;
+          case 'ohmsVoltage':
+          case 'ohmsCurrent':
+          case 'ohmsResistance':
+          case 'ohmsPower':
+            const ohmsVoltage = parseFloat(document.getElementById('ohmsVoltage').value);
+            const ohmsCurrent = parseFloat(document.getElementById('ohmsCurrent').value);
+            const ohmsResistance = parseFloat(document.getElementById('ohmsResistance').value);
+            const ohmsPower = parseFloat(document.getElementById('ohmsPower').value);
+            
+            if (!isNaN(ohmsVoltage) && !isNaN(ohmsCurrent) && isNaN(ohmsResistance) && isNaN(ohmsPower)) {
+              const r = ohmsVoltage / ohmsCurrent;
+              const p = ohmsVoltage * ohmsCurrent;
+              setValue('ohmsResistance', r);
+              setValue('ohmsPower', p);
+            } else if (!isNaN(ohmsVoltage) && isNaN(ohmsCurrent) && !isNaN(ohmsResistance) && isNaN(ohmsPower)) {
+              const i = ohmsVoltage / ohmsResistance;
+              const p = Math.pow(ohmsVoltage, 2) / ohmsResistance;
+              setValue('ohmsCurrent', i);
+              setValue('ohmsPower', p);
+            } else if (!isNaN(ohmsVoltage) && isNaN(ohmsCurrent) && isNaN(ohmsResistance) && !isNaN(ohmsPower)) {
+              const i = ohmsPower / ohmsVoltage;
+              const r = Math.pow(ohmsVoltage, 2) / ohmsPower;
+              setValue('ohmsCurrent', i);
+              setValue('ohmsResistance', r);
+            } else if (isNaN(ohmsVoltage) && !isNaN(ohmsCurrent) && !isNaN(ohmsResistance) && isNaN(ohmsPower)) {
+              const v = ohmsCurrent * ohmsResistance;
+              const p = Math.pow(ohmsCurrent, 2) * ohmsResistance;
+              setValue('ohmsVoltage', v);
+              setValue('ohmsPower', p);
+            } else if (isNaN(ohmsVoltage) && !isNaN(ohmsCurrent) && isNaN(ohmsResistance) && !isNaN(ohmsPower)) {
+              const v = ohmsPower / ohmsCurrent;
+              const r = ohmsPower / Math.pow(ohmsCurrent, 2);
+              setValue('ohmsVoltage', v);
+              setValue('ohmsResistance', r);
+            } else if (isNaN(ohmsVoltage) && isNaN(ohmsCurrent) && !isNaN(ohmsResistance) && !isNaN(ohmsPower)) {
+              const i = Math.sqrt(ohmsPower / ohmsResistance);
+              const v = Math.sqrt(ohmsPower * ohmsResistance);
+              setValue('ohmsVoltage', v);
+              setValue('ohmsCurrent', i);
+            }
+            break;
+        }
+      }, 100);
+    }
+
+    // Clear all inputs except the one being edited
+    function clearAllExcept(exceptId) {
+      const inputs = document.querySelectorAll('input[type="number"]');
+      inputs.forEach(input => {
+        if (input.id !== exceptId) {
+          input.value = '';
+        }
+      });
+    }
+
+    // Initialize event listeners for all input fields
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        // Add input event for immediate feedback
+        input.addEventListener('input', handleInput);
+        
+        // Also handle paste events
+        input.addEventListener('paste', handleInput);
+        
+        // Handle blur in case the value was changed programmatically
+        input.addEventListener('change', handleInput);
+      });
+
+      // Set default values for the resistor color code calculator
+      document.getElementById('band1').selectedIndex = 1; // Brown
+      document.getElementById('band2').selectedIndex = 0; // Black
+      document.getElementById('band3').selectedIndex = 2; // Red (x100)
+      document.getElementById('tolerance').selectedIndex = 6; // Gold (±5%)
+      
+      // Calculate initial resistor value
+      calculateResistorValue();
+    });
+  </script>
+</body>
+</html>
