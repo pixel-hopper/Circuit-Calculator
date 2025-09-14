@@ -417,8 +417,8 @@
       </thead>
       <tbody>
         <tr>
-          <td colspan="2">
-            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+          <td colspan="2" style="text-align: center; padding: 15px;">
+            <div style="display: inline-flex; justify-content: center; gap: 15px; margin: 0 auto;">
               <select id="band1" style="padding: 8px; border-radius: 4px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
                 <option value="0" style="background: black; color: white;">Black - 0</option>
                 <option value="1" style="background: #8B4513; color: white;">Brown - 1</option>
@@ -470,10 +470,11 @@
                 <option value="20" style="background: none; color: black;">None - ±20%</option>
               </select>
             </div>
-            <div style="text-align: center;">
-              <div id="resistorValue" style="font-size: 1.2em; margin-bottom: 10px;">Resistance: 0Ω ±5%</div>
-              <button onclick="calculateResistorValue()" style="padding: 8px 16px; background-color: var(--highlight-color); color: white; border: none; border-radius: 4px; cursor: pointer;">Calculate</button>
-            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align: center; padding: 15px 0;">
+            <div id="resistorValue" style="font-size: 1.2em; font-weight: bold;">Resistance: 0Ω ±5%</div>
           </td>
         </tr>
       </tbody>
@@ -798,6 +799,40 @@
       });
     }
 
+    // Resistor color code calculator
+    function calculateResistorValue() {
+      const band1 = parseInt(document.getElementById('band1').value);
+      const band2 = parseInt(document.getElementById('band2').value);
+      const band3 = parseFloat(document.getElementById('band3').value);
+      const tolerance = document.getElementById('tolerance').value;
+      
+      const value = (band1 * 10 + band2) * band3;
+      
+      let displayValue;
+      let unit = 'Ω';
+      let displayNumber = value;
+      
+      // Convert to appropriate unit
+      if (value >= 1000000) {
+        displayNumber = value / 1000000;
+        unit = 'M' + unit;
+      } else if (value >= 1000) {
+        displayNumber = value / 1000;
+        unit = 'K' + unit;
+      }
+      
+      // Format the number to avoid unnecessary decimal places
+      displayNumber = parseFloat(displayNumber.toFixed(6)).toString();
+      
+      // Remove trailing .0 if present
+      if (displayNumber.endsWith('.0')) {
+        displayNumber = displayNumber.slice(0, -2);
+      }
+      
+      document.getElementById('resistorValue').textContent = 
+        `Resistance: ${displayNumber}${unit} ${tolerance}`;
+    }
+
     // Initialize event listeners for all input fields
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('input[type="number"]').forEach(input => {
@@ -812,10 +847,20 @@
       });
 
       // Set default values for the resistor color code calculator
-      document.getElementById('band1').selectedIndex = 1; // Brown
-      document.getElementById('band2').selectedIndex = 0; // Black
-      document.getElementById('band3').selectedIndex = 2; // Red (x100)
-      document.getElementById('tolerance').selectedIndex = 6; // Gold (±5%)
+      const band1 = document.getElementById('band1');
+      const band2 = document.getElementById('band2');
+      const band3 = document.getElementById('band3');
+      const tolerance = document.getElementById('tolerance');
+      
+      band1.selectedIndex = 1; // Brown
+      band2.selectedIndex = 0; // Black
+      band3.selectedIndex = 2; // Red (x100)
+      tolerance.selectedIndex = 6; // Gold (±5%)
+      
+      // Add change event listeners to all band selectors
+      [band1, band2, band3, tolerance].forEach(select => {
+        select.addEventListener('change', calculateResistorValue);
+      });
       
       // Calculate initial resistor value
       calculateResistorValue();
